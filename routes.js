@@ -4,7 +4,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator/check');
 const bcryptjs = require('bcryptjs');
 const auth = require('basic-auth');
-const { sequelize, models } = require('./db');
+const { Sequelize, sequelize, models } = require('./db');
 const { User, Course } = models;
 
 const router = express.Router();
@@ -17,7 +17,7 @@ router.get('/users', async (req, res, next) => {
     let user;
     const credentials = auth(req);
     if (credentials) {
-        user = await User.findOne({ where: { emailAddress: credentials.name } });
+        user = await User.findOne({ where: { emailAddress: credentials.name }, attributes: [ 'id', 'firstName', 'lastName', 'emailAddress' ] });
         if (user) {
             const authenticated = await bcryptjs.compare(credentials.pass, user.password);
             if (authenticated) {
@@ -36,13 +36,7 @@ router.get('/users', async (req, res, next) => {
         console.warn(message);
         res.status(401).json({ message: 'Access Denied' });
     } else {
-        const filteredUser = {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            emailAddress: user.emailAddress,
-        }
-        res.json(filteredUser);
+        res.json(user);
     }
     
 });
@@ -65,21 +59,42 @@ router.post('/users', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const errorMessages = errors.array().map(error => error.msg);
-        return res.status(400).json({ errors: errorMessages });
+        res.status(400).json({ errors: errorMessages });
     }
 
     // Get the user from the request body.
     const user = req.body;
-    console.dir(user)
-
-    // Set the location to '/', the status to 201 Created, and end the response.
-    res.location('/');
-    res.status(201).end();
+    const hashed = bcryptjs.hashSync(req.body.password, 10);
+    User.create({firstName: user.firstName, lastName: user.lastName, emailAddress: user.emailAddress, password: hashed}).then(newUser => {
+        // Set the location to '/', the status to 201 Created, and end the response.
+        res.location('/');
+        res.status(201).end();
+    });
 });
 
 router.get('/courses', async (req, res) => {
-    const courses = await Course.findAll();
+    const courses = await Course.findAll({ 
+        attributes: [ 
+            'id', 'title', 'description', 'estimatedTime', 'materialsNeeded'
+        ],
+        include: [{
+            model:User, attributes:['firstName', 'lastName', 'emailAddress']
+        }]
+    });
     res.json(courses);
+});
+
+router.get('/courses/:id', async (req, res) => {
+    const course = await Course.findOne({
+        where: {id: req.params.id}, 
+        attributes: [ 
+            'id', 'title', 'description', 'estimatedTime', 'materialsNeeded'
+        ],
+        include: [{
+            model:User, attributes:['firstName', 'lastName', 'emailAddress']
+        }]
+    });
+    res.json(course);
 });
 
 module.exports = router;
