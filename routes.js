@@ -60,11 +60,8 @@ router.post('/users', [
     if (!errors.isEmpty()) {
         const errorMessages = errors.array().map(error => error.msg);
         res.status(400).json({ errors: errorMessages });
-<<<<<<< HEAD
     } else{
         next()
-=======
->>>>>>> 4f72e1c5be7761a624b797e66e771e1c613a01c9
     }
   }, async (req, res) => {
     try {
@@ -80,7 +77,7 @@ router.post('/users', [
     
 });
 
-<<<<<<< HEAD
+
 router.get('/courses', async (req, res, next) => {
     let message = null;
     let user;
@@ -292,41 +289,3 @@ module.exports = router;
 
 // {"title":"Test Course 4","description":"Another dummy test course"}
 // {"firstName":"Test","lastName":"User","emailAddress":"test@user.com","password":"password"}
-=======
-    // Get the user from the request body.
-    const user = req.body;
-    const hashed = bcryptjs.hashSync(req.body.password, 10);
-    User.create({firstName: user.firstName, lastName: user.lastName, emailAddress: user.emailAddress, password: hashed}).then(newUser => {
-        // Set the location to '/', the status to 201 Created, and end the response.
-        res.location('/');
-        res.status(201).end();
-    });
-});
-
-router.get('/courses', async (req, res) => {
-    const courses = await Course.findAll({ 
-        attributes: [ 
-            'id', 'title', 'description', 'estimatedTime', 'materialsNeeded'
-        ],
-        include: [{
-            model:User, attributes:['firstName', 'lastName', 'emailAddress']
-        }]
-    });
-    res.json(courses);
-});
-
-router.get('/courses/:id', async (req, res) => {
-    const course = await Course.findOne({
-        where: {id: req.params.id}, 
-        attributes: [ 
-            'id', 'title', 'description', 'estimatedTime', 'materialsNeeded'
-        ],
-        include: [{
-            model:User, attributes:['firstName', 'lastName', 'emailAddress']
-        }]
-    });
-    res.json(course);
-});
-
-module.exports = router;
->>>>>>> 4f72e1c5be7761a624b797e66e771e1c613a01c9
