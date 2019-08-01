@@ -113,7 +113,7 @@ router.post('/courses',  [
     try {
         const credentials = auth(req);
         const currentUser = await User.findOne({where: {emailAddress: credentials.name}})
-        const newCourse = await Course.create({title: req.body.title, description: req.body.description, estimatedTime: req.body.estimatedTime || null, materialsNeeded: req.body.materialsNeeded || null, userId: currentUser.id});
+        const newCourse = await Course.create({title: req.body.title, description: req.body.description, estimatedTime: req.body.estimatedTime || null, materialsNeeded: req.body.materialsNeeded || null, userId: req.body.userId ? req.body.userId : currentUser.id});
         
         // Set the location to '/courses/id', the status to 201 Created, and end the response.
         return res.status(201).location(`/courses/${newCourse.id}`).end();
@@ -142,7 +142,7 @@ router.put('/courses/:id', [
     }, async (req, res, next) => {
         const updates = req.body;
         const currentCourse = await Course.findOne({where: {id: req.params.id}});
-        const updatedCourse = await Course.update({title: updates.title, description: updates.description, estimatedTime: updates.estimatedTime ? updates.estimatedTime : currentCourse.estimatedTime, materialsNeeded: updates.materialsNeeded ? updates.materialsNeeded : currentCourse.materialsNeeded, userId: currentCourse.userId}, {where: {id: req.params.id}});
+        const updatedCourse = await Course.update({title: updates.title, description: updates.description, estimatedTime: updates.estimatedTime ? updates.estimatedTime : currentCourse.estimatedTime, materialsNeeded: updates.materialsNeeded ? updates.materialsNeeded : currentCourse.materialsNeeded, userId: updates.userId ? updates.userId : currentCourse.userId}, {where: {id: req.params.id}});
         return res.status(204).end();
 });
 
