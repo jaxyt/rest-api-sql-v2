@@ -121,7 +121,7 @@ router.post('/users', [
 /**
  * returns all courses in json format after authenticating the user
  */
-router.get('/courses', authenticate, async (req, res) => {
+router.get('/courses', authenticate, async (req, res, next) => {
     try {
         const courses = await Course.findAll({attributes: ['id','title','description','estimatedTime','materialsNeeded'], include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'emailAddress'] }]});
         res.json(courses);  
@@ -134,10 +134,16 @@ router.get('/courses', authenticate, async (req, res) => {
 /**
  * returns a specific course after authentication is successful
  */
-router.get('/courses/:id', authenticate, async (req, res) => {
+router.get('/courses/:id', authenticate, async (req, res, next) => {
     try {
-        const courses = await Course.findOne({where: { id: req.params.id }, attributes: ['id','title','description','estimatedTime','materialsNeeded'], include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'emailAddress'] }]});
-        res.json(courses);  
+        let message;
+        const course = await Course.findOne({where: { id: req.params.id }, attributes: ['id','title','description','estimatedTime','materialsNeeded'], include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'emailAddress'] }]});
+        if (course != null) {
+            message = res.status(200).json(course);
+        } else {
+            message = res.status(404).json({error: "We were unable to find the course you requested"});
+        }
+        return message
     } catch (err) {
         next(err);
     }
