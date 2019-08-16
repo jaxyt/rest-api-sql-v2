@@ -93,7 +93,18 @@ router.post('/users', [
     check('password')
       .exists()
       .withMessage('Please provide a value for "password"'),
-  ], validate, async (req, res, next) => {
+  ], validate, (req, res, next) => {
+      try {
+        if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(req.body.emailAddress)) {
+            next();
+        } else {
+            res.status(400).json({error: "This email address is not valid"});
+        } 
+      } catch (err) {
+         next(err) 
+      }
+
+  }, async (req, res, next) => {
       try {
         const existingUser = await User.findOne({where: {emailAddress: req.body.emailAddress}});
         if (existingUser) {
